@@ -1,128 +1,140 @@
 package com.yychat.view;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
+import java.util.HashMap;
+import com.yychat.model.Message;
 
-public class FriendList extends JFrame implements ActionListener,MouseListener{
+public class FriendList extends JFrame implements ActionListener, MouseListener {
+    public static HashMap<String, FriendChat> hmFriendChat = new HashMap<>();
 
-    JPanel friendPanel,strangerPanel;
-    JButton myFriendButton1,myStrangerButton1,blackListButton1;
-    JButton myFriendButton2,myStrangerButton2,blackListButton2;
-    JScrollPane friendListScrollPane,strangerListScrollPane;
-    JPanel friendListPanel,strangerListPanel;
-    final int MYFRIENDCOUNT=50;
-    final int STRANGERCOUNT=20;
-    JLabel friendLabel[]=new JLabel[MYFRIENDCOUNT];
-    JLabel strangerLabel[]=new JLabel[STRANGERCOUNT];
-    CardLayout cl;
-    String name;
+    private JPanel friendPanel, strangerPanel;
+    private JButton myFriendButton1, myStrangerButton1, blackListButton1;
+    private JButton myFriendButton2, myStrangerButton2, blackListButton2;
+    private JScrollPane friendListScrollPane, strangerListScrollPane;
+    private JPanel friendListPanel, strangerListPanel;
+    private final int MYFRIENDCOUNT = 50;
+    private JLabel[] friendLabel = new JLabel[MYFRIENDCOUNT];
+    private final int STRANGERCOUNT = 20;
+    private JLabel[] strangerLabel = new JLabel[STRANGERCOUNT];
+    private CardLayout cl;
+    private String name;
 
     public FriendList(String name) {
-        this.name=name;
-        cl=new CardLayout();
-        this.setLayout(cl);
+        this.name = name;
 
-        initFriendPanel();
-        initStrangerPanel();
+        friendPanel = new JPanel(new BorderLayout());
+        myFriendButton1 = new JButton("我的好友");
+        friendPanel.add(myFriendButton1, "North");
+
+        friendListPanel = new JPanel(new GridLayout(MYFRIENDCOUNT, 1));
+        for (int i = 0; i < MYFRIENDCOUNT; i++) {
+            String imageStr = "images/" + (int)(Math.random() * 6) + ".jpg";
+            ImageIcon icon = new ImageIcon(imageStr);
+            friendLabel[i] = new JLabel(i + "", icon, JLabel.LEFT);
+            friendLabel[i].addMouseListener(this);
+            friendLabel[i].setEnabled(false);
+            friendListPanel.add(friendLabel[i]);
+        }
+        friendListScrollPane = new JScrollPane(friendListPanel);
+        friendPanel.add(friendListScrollPane, "Center");
+
+        myStrangerButton1 = new JButton("陌生人");
+        myStrangerButton1.addActionListener(this);
+        blackListButton1 = new JButton("黑名单");
+        JPanel strangerBlackPanel = new JPanel(new GridLayout(2, 1));
+        strangerBlackPanel.add(myStrangerButton1);
+        strangerBlackPanel.add(blackListButton1);
+        friendPanel.add(strangerBlackPanel, "South");
+
+        strangerPanel = new JPanel(new BorderLayout());
+        myFriendButton2 = new JButton("我的好友");
+        myFriendButton2.addActionListener(this);
+        myStrangerButton2 = new JButton("陌生人");
+        JPanel friendStrangerPanel = new JPanel(new GridLayout(2, 1));
+        friendStrangerPanel.add(myFriendButton2);
+        friendStrangerPanel.add(myStrangerButton2);
+        strangerPanel.add(friendStrangerPanel, "North");
+
+        strangerListPanel = new JPanel(new GridLayout(STRANGERCOUNT, 1));
+        for (int i = 0; i < STRANGERCOUNT; i++) {
+            strangerLabel[i] = new JLabel(i + "号陌生人", new ImageIcon("images/tortoise.gif"), JLabel.LEFT);
+            strangerListPanel.add(strangerLabel[i]);
+        }
+        strangerListScrollPane = new JScrollPane(strangerListPanel);
+        strangerPanel.add(strangerListScrollPane, "Center");
+
+        blackListButton2 = new JButton("黑名单");
+        strangerPanel.add(blackListButton2, "South");
+
+        cl = new CardLayout();
+        this.setLayout(cl);
+        this.add(friendPanel, "card1");
+        this.add(strangerPanel, "card2");
 
         this.setIconImage(new ImageIcon("images/duck2.gif").getImage());
-        this.setTitle(name+"的好友列表");
+        this.setTitle(name + "的好友列表");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setBounds(800, 600, 350, 250);
+        this.setBounds(800, 600, 350, 350);
         this.setVisible(true);
     }
 
-    private void initFriendPanel() {
-        friendPanel=new JPanel(new BorderLayout());
-        myFriendButton1=new JButton("我的好友");
-        friendPanel.add(myFriendButton1,BorderLayout.NORTH);
-
-        friendListPanel=new JPanel(new GridLayout(MYFRIENDCOUNT,1));
-        for(int i=0;i<friendLabel.length;i++){
-            String imageStr="images/"+(int)(Math.random()*6)+".jpg";
-            ImageIcon imageIcon=new ImageIcon(imageStr);
-            friendLabel[i]=new JLabel(i+"号好友",imageIcon,JLabel.LEFT);
-            friendLabel[i].addMouseListener(this);
-            friendListPanel.add(friendLabel[i]);
+    public void activateOnlineFriendIcon(Message mess) {
+        String onlineFriend = mess.getContent();
+        String[] onlineFriendName = onlineFriend.split("\\+");
+        for (int i = 1; i < onlineFriendName.length; i++) {
+            try {
+                int idx = Integer.parseInt(onlineFriendName[i]);
+                if (idx >= 0 && idx < MYFRIENDCOUNT) {
+                    friendLabel[idx].setEnabled(true);
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("无效的用户名格式");
+            }
         }
-
-        friendListScrollPane=new JScrollPane(friendListPanel);
-        friendPanel.add(friendListScrollPane,BorderLayout.CENTER);
-
-        myStrangerButton1=new JButton("陌生人");
-        blackListButton1=new JButton("黑名单");
-        JPanel bottomPanel = new JPanel(new GridLayout(2,1));
-        bottomPanel.add(myStrangerButton1);
-        bottomPanel.add(blackListButton1);
-        friendPanel.add(bottomPanel,BorderLayout.SOUTH);
-
-        myStrangerButton1.addActionListener(this);
-        blackListButton1.addActionListener(this);
-
-        this.add(friendPanel,"card1");
     }
 
-    private void initStrangerPanel() {
-        strangerPanel=new JPanel(new BorderLayout());
-        myStrangerButton2=new JButton("陌生人");
-        strangerPanel.add(myStrangerButton2,BorderLayout.NORTH);
-
-        strangerListPanel=new JPanel(new GridLayout(STRANGERCOUNT,1));
-        for(int i=0;i<strangerLabel.length;i++){
-            // 只加这一行：按照PDF添加陌生人头像
-            ImageIcon icon = new ImageIcon("images/tortoise.gif");
-            strangerLabel[i]=new JLabel(i+"号陌生人",icon,JLabel.LEFT);
-            strangerListPanel.add(strangerLabel[i]);
+    public void activateNewOnlineFriend(String friendName) {
+        try {
+            int idx = Integer.parseInt(friendName);
+            if (idx >= 0 && idx < MYFRIENDCOUNT) {
+                friendLabel[idx].setEnabled(true);
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("不是数字用户名，无法激活");
         }
-
-        strangerListScrollPane=new JScrollPane(strangerListPanel);
-        strangerPanel.add(strangerListScrollPane,BorderLayout.CENTER);
-
-        myFriendButton2=new JButton("我的好友");
-        blackListButton2=new JButton("黑名单");
-        JPanel bottomPanel = new JPanel(new GridLayout(2,1));
-        bottomPanel.add(myFriendButton2);
-        bottomPanel.add(blackListButton2);
-        strangerPanel.add(bottomPanel,BorderLayout.SOUTH);
-
-        myFriendButton2.addActionListener(this);
-        blackListButton2.addActionListener(this);
-
-        this.add(strangerPanel,"card2");
     }
 
-    public static void main(String args[]){
-        FriendList fl=new FriendList("pdh");
-    }
-
-    public void actionPerformed(ActionEvent arg0) {
-        if(arg0.getSource()==myFriendButton2){
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == myFriendButton2) {
             cl.show(this.getContentPane(), "card1");
-        }
-        if(arg0.getSource()==myStrangerButton1){
+        } else if (e.getSource() == myStrangerButton1) {
             cl.show(this.getContentPane(), "card2");
         }
     }
 
-    public void mouseClicked(MouseEvent arg0) {
-        if(arg0.getClickCount()==2){
-            JLabel jl=(JLabel) arg0.getSource();
-            String toName=jl.getText();
-            new FriendChat(name+" to "+toName);
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        if (e.getClickCount() == 2) {
+            JLabel jl = (JLabel) e.getSource();
+            String toName = jl.getText();
+            FriendChat fc = new FriendChat(name, toName);
+            hmFriendChat.put(name + "to" + toName, fc);
         }
     }
 
-    public void mouseEntered(MouseEvent arg0) {
-        JLabel jl=(JLabel) arg0.getSource();
+    @Override public void mouseEntered(MouseEvent e) {
+        JLabel jl = (JLabel) e.getSource();
         jl.setForeground(Color.RED);
     }
 
-    public void mouseExited(MouseEvent arg0) {
-        JLabel jl=(JLabel) arg0.getSource();
+    @Override public void mouseExited(MouseEvent e) {
+        JLabel jl = (JLabel) e.getSource();
         jl.setForeground(Color.BLUE);
     }
 
-    public void mousePressed(MouseEvent arg0) {}
-    public void mouseReleased(MouseEvent arg0) {}
+    @Override public void mousePressed(MouseEvent e) {}
+    @Override public void mouseReleased(MouseEvent e) {}
 }
